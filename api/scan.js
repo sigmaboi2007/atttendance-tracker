@@ -1,6 +1,6 @@
 const { hit } = require("./_redis");
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
 const PROMPT = "You read school timetable images. Return ONLY JSON: {\"subjects\":[{\"name\":\"full subject name\"}],\"slots\":[{\"day\":0,\"start\":\"08:00\",\"end\":\"09:00\",\"subject\":\"exact name from subjects\"}]}. day is 0=Monday to 5=Saturday. Times are 24-hour (2 pm = 14:00) and classes run between 08:00 and 17:00. Skip breaks and lunch. If the image has a table mapping short codes to course names, use the full course names. A class spanning several columns is one slot with its true start and end. If several timetables are shown, use only the first one.";
 
 module.exports = async (req, res) => {
