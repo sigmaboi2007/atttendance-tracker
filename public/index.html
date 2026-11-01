@@ -266,7 +266,7 @@ function drag(e,id){
  document.addEventListener("pointermove",mv);document.addEventListener("pointerup",up);document.addEventListener("pointercancel",up);mv(e);
 }
 
-var scanMsg="",prev=null,GMODEL="gemini-2.5-flash";
+var scanMsg="",prev=null,GMODEL="gemini-3.5-flash";
 var PROMPT="You read school timetable images. Return ONLY JSON: {\"subjects\":[{\"name\":\"full subject name\"}],\"slots\":[{\"day\":0,\"start\":\"08:00\",\"end\":\"09:00\",\"subject\":\"exact name from subjects\"}]}. day is 0=Monday to 5=Saturday. Times are 24-hour (2 pm = 14:00) and classes run between 08:00 and 17:00. Skip breaks and lunch. If the image has a table mapping short codes to course names, use the full course names. A class spanning several columns is one slot with its true start and end. If several timetables are shown, use only the first one.";
 function gkey(){try{return localStorage.getItem("attGemKey")||""}catch(e){return""}}
 function pick(){document.getElementById("fi").click()}
