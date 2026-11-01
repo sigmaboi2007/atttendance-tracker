@@ -17,9 +17,9 @@ module.exports = async (req, res) => {
 
   const ip = String(req.headers["x-forwarded-for"] || "unknown").split(",")[0].trim();
   const day = new Date().toISOString().slice(0, 10);
-  if (!(await hit("att:rl:" + ip + ":" + day, +process.env.SCAN_PER_DAY || 3)))
+  if (!(await hit("att:rl:" + ip + ":" + day, +process.env.SCAN_PER_DAY || 10)))
     return res.status(429).json({ error: "You’ve used today’s free scans. Try tomorrow, or fill the timetable by hand." });
-  if (!(await hit("att:cap:" + day, +process.env.SCAN_DAILY_CAP || 100)))
+  if (!(await hit("att:cap:" + day, +process.env.SCAN_DAILY_CAP || 1200)))
     return res.status(429).json({ error: "The site’s daily AI limit is reached. Try tomorrow, or fill the timetable by hand." });
 
   try {
