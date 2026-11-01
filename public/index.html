@@ -87,6 +87,12 @@ var S={subs:[],tt:{},marks:{},off:{},ds:{},presets:DEFP.slice()},tab="sub",date=
 try{var r=localStorage.getItem(KEY);if(r)S=JSON.parse(r);else{var o=localStorage.getItem("attTrackerV2");if(o)migrate(JSON.parse(o))}}catch(e){}
 ["tt","marks","off","ds"].forEach(function(k){S[k]=S[k]||{}});S.presets=S.presets||DEFP.slice();
 
+function resetAll(){
+ try{localStorage.removeItem(KEY);localStorage.removeItem("attTrackerV2")}catch(e){}
+ S={subs:[],tt:{},marks:{},off:{},ds:{},presets:DEFP.slice()};
+ ed=null;delMode=false;sheet=null;msg="";ask=null;tab="sub";
+ save();render();
+}
 function migrate(o){
  S.subs=o.subs||[];var am=o.am||{},M={m0:"480-540",m1:"540-600",m2:"630-690",m3:"690-750"},A={s:"840-930","430":"840-990","4":"840-960","5":"840-1020"};
  function mp(di,x){return M[x]||(x=="a0"?A[am[di]||"s"]:"930-990")}
@@ -170,6 +176,9 @@ function render(){
   if(S.subs.length&&ed==null){
    if(S.subs.length<8)a+='<button class="btn" onclick="add()">+ Add</button>';
    a+='<button class="btn g" onclick="delMode=!delMode;ask=null;render()">'+(delMode?"Finish":"Delete")+'</button>';
+   a+=(ask=="reset"
+     ?'<button class="dl" onclick="resetAll()">Confirm Reset?</button><button class="btn g" onclick="ask=null;render()">Cancel</button>'
+     :'<button class="dl" onclick="ask=\'reset\';render()">Reset All</button>');
   }
   var t=0,at=0;S.subs.forEach(function(s){t+=s.total;at+=s.att});
   var o=t?Math.min(100,at/t*100):0;
@@ -291,8 +300,25 @@ function scanFile(inp){var f=inp.files&&inp.files[0];inp.value="";if(!f)return;
  if(OWN&&!gkey()){scanMsg="Add your Gemini API key first.";render();return}
  scanMsg="Reading your timetable… this takes a few seconds.";render();
  shrink(f,function(b64){(OWN?direct(b64):viaServer(b64)).then(function(d){prev=norm(d);if(!prev.slots.length)throw new Error("No classes found in that image.");scanMsg=""}).catch(function(e){prev=null;scanMsg=/fetch|network/i.test(e.message||"")?(OWN?"Couldn’t reach Google. Check your internet connection and your API key.":"Couldn’t reach the AI server. The AI scan only works on the deployed Vercel site. To test on your computer, use the own-key version."):(e.message||"Scan failed.")}).then(render)},function(){scanMsg="Couldn’t read that image. Try a JPG or PNG.";render()})}
+function editScanSub(oldName, val){
+ var newName = val.trim();
+ if(!newName || newName === oldName) return;
+ var idx = prev.subs.indexOf(oldName);
+ if(idx > -1) prev.subs[idx] = newName;
+ prev.slots.forEach(function(sl){
+  if(sl.n.toLowerCase() === oldName.toLowerCase()){
+   sl.n = newName;
+  }
+ });
+ render();
+}
 function scanSheet(){if(!prev)return"";
- var h='<div class="back"></div><div class="sheet"><b>Review your timetable</b><div class="mu" style="margin:4px 0 8px">Check it, then apply. This replaces your current timetable. Attendance counts are not touched, and you can fix anything afterwards.</div><div class="mu">Subjects: '+esc(prev.subs.join(", "))+'</div>';
+ var h='<div class="back"></div><div class="sheet"><b>Review your timetable</b><div class="mu" style="margin:4px 0 8px">Edit subject names below to shorten or clarify them, then apply.</div>';
+ h+='<b style="font-size:13px;display:block;margin-top:6px">Detected Subjects (tap to rename):</b><div style="display:flex;flex-direction:column;gap:6px;margin:8px 0">';
+ prev.subs.forEach(function(n,i){
+  h+='<div class="row"><span class="mu" style="width:20px">'+(i+1)+'.</span><input type="text" value="'+esc(n)+'" onchange="editScanSub(\''+esc(n)+'\',this.value)" style="padding:6px 8px;font-size:13px"><span class="mu" title="Edit name">✎</span></div>';
+ });
+ h+='</div><b style="font-size:13px;display:block;margin-top:10px">Schedule Slots:</b>';
  for(var di=0;di<6;di++){var l=prev.slots.filter(function(x){return x.d==di}).sort(function(a,b){return cmp(a.id,b.id)});
   h+='<div class="pr" style="display:block"><b>'+DAYS[di]+'</b> <span class="mu">'+(l.length?l.map(function(x){return lab(x.id)+" "+esc(x.n)}).join(" · "):"no classes")+'</span></div>'}
  return h+'<div class="row" style="margin-top:10px"><button class="btn" onclick="applyScan()">Apply</button><button class="btn g" onclick="prev=null;render()">Cancel</button></div></div>'}
